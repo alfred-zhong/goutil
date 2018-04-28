@@ -3,7 +3,6 @@ package goutil
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 // Range 表示区间。
@@ -75,30 +74,30 @@ type NumberRange struct {
 }
 
 func (n NumberRange) String() string {
-	var sb strings.Builder
+	var s string
 	if n.lower.IsOpen() {
-		sb.WriteByte('(')
+		s += "("
 	} else if n.lower.IsClosed() {
-		sb.WriteByte('[')
+		s += "["
 	} else {
-		sb.WriteByte('?')
+		s += "?"
 	}
 
-	sb.WriteString(fmt.Sprintf(
+	s += fmt.Sprintf(
 		"%s,%s",
 		strconv.FormatFloat(n.lower.Value, 'f', -1, 64),
 		strconv.FormatFloat(n.upper.Value, 'f', -1, 64),
-	))
+	)
 
 	if n.upper.IsOpen() {
-		sb.WriteByte(')')
+		s += ")"
 	} else if n.upper.IsClosed() {
-		sb.WriteByte(']')
+		s += "]"
 	} else {
-		sb.WriteByte('?')
+		s += "?"
 	}
 
-	return sb.String()
+	return s
 }
 
 // LowerEndpoint 返回下限边界点。

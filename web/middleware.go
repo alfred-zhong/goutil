@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -32,11 +32,16 @@ func (r responseBodyWriter) Write(b []byte) (int, error) {
 	return r.ResponseWriter.Write(b)
 }
 
-// LoggerMiddleware 打印请求和响应相关信息的日志，便于 debug。
+// LoggerMiddleware 使用 logrus 的 std 实例打印请求和响应相关信息的日志，便于 debug。
 func LoggerMiddleware(printBody bool) func(*gin.Context) {
+	return LoggerMiddlewareWithLogger(printBody, logrus.StandardLogger())
+}
+
+// LoggerMiddlewareWithLogger 使用指定的 logrus 的 Logger 实例打印请求和响应相关信息的日志，便于 debug。
+func LoggerMiddlewareWithLogger(printBody bool, logger *logrus.Logger) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var (
-			entry     *log.Entry
+			entry     *logrus.Entry
 			reqURI    string
 			startTime time.Time
 		)
@@ -49,7 +54,7 @@ func LoggerMiddleware(printBody bool) func(*gin.Context) {
 
 		// 健康检查接口不打印日志。
 		if reqURI != "/healthz" {
-			entry = log.WithField(logKeyRequestID, c.GetString(contextKeyRequestID))
+			entry = logger.WithField(logKeyRequestID, c.GetString(contextKeyRequestID))
 
 			if printBody {
 				var (

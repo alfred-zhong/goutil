@@ -2,7 +2,7 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -14,10 +14,15 @@ const (
 type LogContext struct {
 	Ctx    *gin.Context
 	Module string
+	Logger *logrus.Logger
 }
 
-func (c *LogContext) entry() (entry *log.Entry) {
-	entry = log.NewEntry(log.StandardLogger())
+func (c *LogContext) entry() (entry *logrus.Entry) {
+	if c.Logger != nil {
+		entry = logrus.NewEntry(c.Logger)
+	} else {
+		entry = logrus.NewEntry(logrus.StandardLogger())
+	}
 	if c.Ctx != nil {
 		if requestID := c.Ctx.GetString(contextKeyRequestID); requestID != "" {
 			entry = entry.WithField(logKeyRequestID, c.Ctx.GetString(contextKeyRequestID))

@@ -1,10 +1,13 @@
 package prome
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 	"runtime/pprof"
+	"time"
 
+	"github.com/alfred-zhong/goutil/misc"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -85,15 +88,41 @@ func registerRuntime(
 }
 
 func updateRuntimeGuage() {
-	var memstats runtime.MemStats
-	runtime.ReadMemStats(&memstats)
+	// var memstats runtime.MemStats
+	// runtime.ReadMemStats(&memstats)
 
-	memstatsAllocGauge.Set(float64(memstats.Alloc))
-	memstatsSysGauge.Set(float64(memstats.Sys))
-	memstatsLastGCPauseNSGauge.Set(float64(memstats.PauseNs[(memstats.NumGC+255)%256]))
+	// memstatsAllocGauge.Set(float64(memstats.Alloc))
+	// memstatsSysGauge.Set(float64(memstats.Sys))
+	// memstatsLastGCPauseNSGauge.Set(float64(memstats.PauseNs[(memstats.NumGC+255)%256]))
 
 	runtimeNumGoroutineGauge.Set(float64(runtime.NumGoroutine()))
 	osThreadsGauge.Set(float64(pprof.Lookup("threadcreate").Count()))
 	runtimeGOMaxProcsGauge.Set(float64(runtime.GOMAXPROCS(0)))
 	runtimeNumCPUGauge.Set(float64(runtime.NumCPU()))
+}
+
+// Because of runtime.ReadMemStats will STW and has big affect on the
+// performance. So move it in this func and call it in timer.
+func updateRuntimeMemstats(ctx context.Context, interval int) {
+	if interval <= 0 {
+		interval = 60
+	}
+
+	t := misc.NewInstantTicker(time.Duration(interval) * time.Second)
+	defer t.Stop()
+
+L:
+	for {
+		select {
+		case <-t.C:
+			var memstats runtime.MemStats
+			runtime.ReadMemStats(&memstats)
+
+			memstatsAllocGauge.Set(float64(memstats.Alloc))
+			memstatsSysGauge.Set(float64(memstats.Sys))
+			memstatsLastGCPauseNSGauge.Set(float64(memstats.PauseNs[(memstats.NumGC+255)%256]))
+		case <-ctx.Done():
+			break L
+		}
+	}
 }

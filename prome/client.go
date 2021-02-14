@@ -15,11 +15,14 @@ type Client struct {
 
 	// Enable metrics of runtime. Default enabled.
 	EnableRuntime bool
+	// Interval of update memstats. Unit: seconds. Default 60s.
+	UpdateMemStatsInterval int
 
 	// Labels which will always be attached to metrics.
 	ConstLabels prometheus.Labels
 
 	srv               *http.Server
+	cancel            context.CancelFunc
 	handler           http.Handler
 	runtimeCollectors []prometheus.Collector
 	collectors        []prometheus.Collector
@@ -36,6 +39,10 @@ func (c *Client) ListenAndServe(addr string) error {
 			registerRuntime(c.ServiceName, &c.runtimeCollectors, c.ConstLabels)
 			reg.MustRegister(c.runtimeCollectors...)
 			constructs = append(constructs, updateRuntimeGuage)
+
+			ctx, cancel := context.WithCancel(context.Background())
+			c.cancel = cancel
+			go updateRuntimeMemstats(ctx, c.UpdateMemStatsInterval)
 		}
 		reg.MustRegister(c.collectors...)
 
@@ -56,6 +63,9 @@ func (c *Client) ListenAndServe(addr string) error {
 
 // Close shutdown of listening.
 func (c *Client) Close() error {
+	if c.cancel != nil {
+		c.cancel()
+	}
 	if c.srv != nil {
 		return c.srv.Shutdown(context.Background())
 	}
@@ -72,6 +82,10 @@ func (c *Client) Handler() http.Handler {
 			registerRuntime(c.ServiceName, &c.runtimeCollectors, c.ConstLabels)
 			reg.MustRegister(c.runtimeCollectors...)
 			constructs = append(constructs, updateRuntimeGuage)
+
+			ctx, cancel := context.WithCancel(context.Background())
+			c.cancel = cancel
+			go updateRuntimeMemstats(ctx, c.UpdateMemStatsInterval)
 		}
 		reg.MustRegister(c.collectors...)
 

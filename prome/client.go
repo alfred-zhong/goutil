@@ -121,3 +121,44 @@ func NewClient(serviceName string, path string) *Client {
 		EnableRuntime: true,
 	}
 }
+
+// Option defines argument for create Server.
+type Option func(*Client)
+
+// WithRuntimeEnable creates Option which determines whether to enables metrics
+// of runtime. updateMemstatsInterval make sense only if enable set to true.
+func WithRuntimeEnable(enable bool, updateMemstatsInterval int) Option {
+	return func(c *Client) {
+		c.EnableRuntime = enable
+		if enable && updateMemstatsInterval > 0 {
+			c.UpdateMemStatsInterval = updateMemstatsInterval
+		}
+	}
+}
+
+// WithConstLables creates Option which append const labels to the client.
+func WithConstLables(kv ...string) Option {
+	return func(c *Client) {
+		m := make(map[string]string, len(kv)/2)
+		for i := 0; i < len(kv); i += 2 {
+			if i+1 < len(kv) {
+				m[kv[i]] = kv[i+1]
+			}
+		}
+		c.ConstLabels = prometheus.Labels(m)
+	}
+}
+
+// NewClientWithOption creates Client with optional Option.
+func NewClientWithOption(serviceName, path string, opts ...Option) *Client {
+	c := &Client{
+		ServiceName:   serviceName,
+		Path:          path,
+		EnableRuntime: true,
+	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+	return c
+}

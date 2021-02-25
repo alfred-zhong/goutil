@@ -114,6 +114,8 @@ func decorateHandler(h http.Handler) http.Handler {
 }
 
 // NewClient creates and returns a new Client instance.
+//
+// Deprecated: Use NewClientWithOption instead.
 func NewClient(serviceName string, path string) *Client {
 	return &Client{
 		ServiceName:   serviceName,

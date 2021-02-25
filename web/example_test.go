@@ -1,11 +1,11 @@
-package main
+package web_test
 
 import (
 	"github.com/alfred-zhong/goutil/web"
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
+func ExampleLoggerMiddleware() {
 	e := gin.New()
 
 	e.Use(web.RequestIDMiddleware)

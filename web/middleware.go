@@ -54,7 +54,10 @@ func LoggerMiddlewareWithLogger(printBody bool, logger *logrus.Logger) func(*gin
 
 		// 健康检查接口不打印日志。
 		if reqURI != "/healthz" {
-			entry = logger.WithField(logKeyRequestID, c.GetString(contextKeyRequestID))
+			entry = logrus.NewEntry(logger)
+			if requestID := c.GetString(contextKeyRequestID); requestID != "" {
+				entry = entry.WithField(logKeyRequestID, c.GetString(contextKeyRequestID))
+			}
 
 			if printBody {
 				var (

@@ -64,9 +64,11 @@ func LoggerMiddlewareWithLogger(printBody bool, logger *logrus.Logger) func(*gin
 					body []byte
 					buf  bytes.Buffer
 				)
-				tee := io.TeeReader(c.Request.Body, &buf)
-				body, _ = ioutil.ReadAll(tee)
-				c.Request.Body = ioutil.NopCloser(&buf)
+				if c.Request.Body != nil {
+					tee := io.TeeReader(c.Request.Body, &buf)
+					body, _ = ioutil.ReadAll(tee)
+					c.Request.Body = ioutil.NopCloser(&buf)
+				}
 
 				entry.Infof(
 					"|RequestLog| %s %s HTTP/%d.%d, body: %s, client: %s",

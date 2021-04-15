@@ -3,7 +3,6 @@ package log
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"runtime"
 	"sort"
@@ -14,7 +13,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sys/unix"
 )
 
 type TextFormatter struct {
@@ -91,22 +89,6 @@ type TextFormatter struct {
 	// incase of printing very large messages which can't be stored in some log
 	// servers (eg. rsyslog). Default 0 means no limit.
 	MaxMessageSize int
-}
-
-func checkIfTerminal(w io.Writer) bool {
-	switch v := w.(type) {
-	case *os.File:
-		return isTerminal(int(v.Fd()))
-	default:
-		return false
-	}
-}
-
-const ioctlReadTermios = unix.TIOCGETA
-
-func isTerminal(fd int) bool {
-	_, err := unix.IoctlGetTermios(fd, ioctlReadTermios)
-	return err == nil
 }
 
 func (f *TextFormatter) init(entry *logrus.Entry) {

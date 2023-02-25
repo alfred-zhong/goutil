@@ -14,6 +14,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1
 	github.com/ugorji/go v1.2.6 // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	golang.org/x/sys v0.1.0
 	google.golang.org/protobuf v1.27.1 // indirect
 )
